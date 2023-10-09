@@ -1,0 +1,53 @@
+#create time: 2023-09-15
+#created by Paul.
+#Note: csv file inport and csv file export: will cause data type issue
+#Ex: data 0 to data 0.0.
+#reaspn is: By default, integers still get converted to floats if there are missing values
+#solution: csv file intort -> excel file export; and manually save this excel file to csv file.
+
+import pandas as pd
+import numpy as np
+import csv
+import os
+import openpyxl
+
+
+df = pd.read_csv(r'C:\Users\dapengw\Desktop\python_project\TEMPUS_Original_Data_PaulWork.csv')
+
+     
+for index, row in df.iterrows():
+    redcap_event_name = row["redcap_event_name"]
+    if row["redcap_event_name"] == 'Comprehensive Genomic Profiling':
+         print("insert data")
+         df.to_excel(r'C:\Users\dapengw\Desktop\python_report\Tempus_Comprehensive_Tem.xlsx', columns =['participant_id','redcap_event_name',
+          'PCATYPE1','CGPTEMPUS','CGPFILES','TMB','Comprehensive Genomic Profiling_complete'],index=False)
+         
+    else:
+         print('nothing')
+
+df_Modify = pd.read_excel(r'C:\Users\dapengw\Desktop\python_report\Tempus_Comprehensive_Tem.xlsx')
+df_Modify.columns = map(str.lower, df_Modify.columns)
+
+#drop others
+df_Modify = df_Modify.drop(df_Modify[df_Modify['redcap_event_name'] != 'Comprehensive Genomic Profiling'].index)
+# reset the index of the dataframe after drop rows
+df_Modify.reset_index(inplace=True, drop=True)
+
+# Rename one column name 'participant_id' to 'record_id'
+df_Modify.rename(columns={'participant_id': 'record_id'}, inplace=True)
+df_Modify.rename(columns={'comprehensive genomic profiling_complete': 'comprehensive_genomic_profiling_complete'}, inplace=True)
+
+# Change the value in redcap_event_name column
+df_Modify.loc[df_Modify['redcap_event_name'] == 'Comprehensive Genomic Profiling', 'redcap_event_name'] = 'comprehensive_geno_arm_1'
+
+
+# Change the value in cell if it equals 'V5_2' or other value to '2'
+df_Modify.loc[df_Modify['comprehensive_genomic_profiling_complete'] == 'V5_2', 'comprehensive_genomic_profiling_complete'] = '2'
+df_Modify.loc[df_Modify['comprehensive_genomic_profiling_complete'] == 'V4_2', 'comprehensive_genomic_profiling_complete'] = '2'
+df_Modify.loc[df_Modify['comprehensive_genomic_profiling_complete'] == 'V4_8', 'comprehensive_genomic_profiling_complete'] = '2'
+df_Modify.loc[df_Modify['comprehensive_genomic_profiling_complete'] == 'V5_0', 'comprehensive_genomic_profiling_complete'] = '0'
+df_Modify.loc[df_Modify['comprehensive_genomic_profiling_complete'] == 'V5_1', 'comprehensive_genomic_profiling_complete'] = '2'
+
+#export
+df_Modify.to_excel(r'C:\Users\dapengw\Desktop\python_report\Tempus_Comprehensive_Final.xlsx',index=False)
+

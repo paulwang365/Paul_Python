@@ -1,0 +1,59 @@
+#create time: 2023-09-15
+#created by Paul.
+#this code work for Enrollment form (single form)
+#Note: csv file import and csv file export: will cause data type issue
+#Ex: data 0 to data 0.0.
+#reason is: By default, integers still get converted to floats if there are missing values
+#solution: csv file import -> excel file export; and manually save this excel file to csv file.
+
+
+import pandas as pd
+import numpy as np
+
+
+
+df = pd.read_csv(r'C:\Users\dapengw\Desktop\python_project\TEMPUS_Original_Data_PaulWork.csv')
+     
+for index, row in df.iterrows():
+    redcap_event_name = row["redcap_event_name"]
+    if pd.isna(redcap_event_name):
+         print("insert data")
+         df.to_excel(r'C:\Users\dapengw\Desktop\python_report\Tempus_Enrollment_Tem.xlsx', columns =['participant_id','redcap_event_name','DMMRN',
+          'DMMRNTYPE','DMFNAME','DMMNAME','DMLNAME','DMINIT','DMDOB','ICYN','ICDAT','ICFVDT','IEYN1',
+          'PROTOCOL','GC','GC2___1','GC2___2','GC2___3','GC2___4','GC2___other',
+          'SITE_G1','SITE_G2_FU','SITE_G2_NO_FU','GC_N','GC2_N___1','GC2_N___2',
+          'GC2_N___3','GC2_N___4','GC2_N___other','SITE_N','Enrollment_complete'],index=False)
+         
+    else:
+         print('nothing')
+
+df_Modify = pd.read_excel(r'C:\Users\dapengw\Desktop\python_report\Tempus_Enrollment_Tem.xlsx')
+df_Modify.columns = map(str.lower, df_Modify.columns)
+
+#print(df_Modify)
+
+# Create a boolean mask for rows where 'redcap_event_name' that need droped
+mask = (df_Modify['redcap_event_name'] == 'Comprehensive Genomic Profiling') | (df_Modify['redcap_event_name'] == 'Baseline (G1)') | (df_Modify['redcap_event_name'] == 'Month 6') | (df_Modify['redcap_event_name'] == 'Month 12') | (df_Modify['redcap_event_name'] == 'Month 18') | (df_Modify['redcap_event_name'] == 'Month 24') | (df_Modify['redcap_event_name'] == 'Follow-Up (G1, V1)')
+# Use the mask to drop the rows
+df_Modify = df_Modify[~mask]
+
+
+#drop the null values in mmrn columns after checking mmrn is NaN:
+df_Modify.dropna(subset=['dmmrn'], inplace=True)
+# reset the index of the dataframe after drop rows
+df_Modify.reset_index(inplace=True, drop=True)
+
+
+# Rename one column name 'participant_id' to 'record_id'
+df_Modify.rename(columns={'participant_id': 'record_id'}, inplace=True)
+# Add an empty column 'redcap_event_name' with a default value of 'enrollment_arm_1'
+df_Modify = df_Modify.assign(redcap_event_name='enrollment_arm_1')
+# Change the value in cell if it equals 'V5_2' to '2'
+df_Modify.loc[df_Modify['enrollment_complete'] == 'V5_2', 'enrollment_complete'] = '2'
+df_Modify.loc[df_Modify['enrollment_complete'] == 'V4_2', 'enrollment_complete'] = '2'
+df_Modify.loc[df_Modify['enrollment_complete'] == 'V4.1_2', 'enrollment_complete'] = '2'
+
+#Final export data to excel file.
+df_Modify.to_excel(r'C:\Users\dapengw\Desktop\python_report\Tempus_Enrollment_Final.xlsx',index=False)
+
+

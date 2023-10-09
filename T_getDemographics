@@ -1,0 +1,78 @@
+#create time: 2023-09-15
+#created by Paul.
+#Note: csv file inport and csv file export: will cause data type issue
+#Ex: data 0 to data 0.0.
+#reason is: By default, integers still get converted to floats if there are missing values
+#solution: csv file intort -> excel file export; and manually save this excel file to csv file.
+
+import pandas as pd
+import numpy as np
+import csv
+import os
+import openpyxl
+
+
+df = pd.read_csv(r'C:\Users\dapengw\Desktop\python_project\TEMPUS_Original_Data_PaulWork.csv')
+
+     
+for index, row in df.iterrows():
+    redcap_event_name = row["redcap_event_name"]
+    if row["redcap_event_name"] == 'Baseline (G1)':
+         print("Data inserting...")
+         df.to_excel(r'C:\Users\dapengw\Desktop\python_report\Tempus_Demographics_DiagnosisSolidTumor_Tem.xlsx', columns =['participant_id','redcap_event_name',
+          'patient_gender','RACE','RACEOTH','ETHNIC','Demographics_complete',
+          'MHSTDAT','MHSTERM','MHSTDT1','CLNSTGYN','MHSTGTYP','MHCSRYN','MHHIST','MHBEHAV',
+          'MHSTAGE','MHTSTG','MHNSTG','MHMSTG','MHTMGR','MHSZYN','MHTMSZ','MHTMSZU',
+          'PATHSTG','MHPSTGTP','MHPSRYN','MHSURGCN','MHRESYN','MHRESDAT','MHPHIST','MHPBEHAV',
+          'MHPSTAGE','MHPTSTG','MHPNSTG','MHPMSTG','MHPTMGR','PATHSZYN','MHPTMSZ','MHPTMSU','GLEASON','Primary Cancer Diagnosis - Solid Tumors_complete'],index=False)
+         
+    else:
+         print('nothing')
+
+df_Modify = pd.read_excel(r'C:\Users\dapengw\Desktop\python_report\Tempus_Demographics_DiagnosisSolidTumor_Tem.xlsx')
+df_Modify.columns = map(str.lower, df_Modify.columns)
+
+# Rename one column name 'participant_id' to 'record_id'
+df_Modify.rename(columns={'participant_id': 'record_id'}, inplace=True)
+df_Modify.rename(columns={'primary cancer diagnosis - solid tumors_complete': 'primary_cancer_diagnosis_solid_tumors_complete'}, inplace=True)
+#drop others
+df_Modify = df_Modify.drop(df_Modify[df_Modify['redcap_event_name'] != 'Baseline (G1)'].index)
+# reset the index of the dataframe after drop rows
+df_Modify.reset_index(inplace=True, drop=True)
+
+# Change the value in redcap_event_name column
+df_Modify.loc[df_Modify['redcap_event_name'] == 'Baseline (G1)', 'redcap_event_name'] = 'baseline_g1_arm_1'
+
+
+# Change the value in cell if it equals 'V5_2' to '2' etc
+df_Modify.loc[df_Modify['demographics_complete'] == 'V5_2', 'demographics_complete'] = '2'
+df_Modify.loc[df_Modify['demographics_complete'] == 'V4_2', 'demographics_complete'] = '2'
+df_Modify.loc[df_Modify['demographics_complete'] == 'V4_8', 'demographics_complete'] = '2'
+df_Modify.loc[df_Modify['demographics_complete'] == 'V5_0', 'demographics_complete'] = '0'
+df_Modify.loc[df_Modify['demographics_complete'] == 'V5_6', 'demographics_complete'] = '2'
+df_Modify.loc[df_Modify['primary_cancer_diagnosis_solid_tumors_complete'] == 'V5_0', 'primary_cancer_diagnosis_solid_tumors_complete'] = '0'
+df_Modify.loc[df_Modify['primary_cancer_diagnosis_solid_tumors_complete'] == 'V5_1', 'primary_cancer_diagnosis_solid_tumors_complete'] = '2'
+df_Modify.loc[df_Modify['primary_cancer_diagnosis_solid_tumors_complete'] == 'V5_2', 'primary_cancer_diagnosis_solid_tumors_complete'] = '2'
+df_Modify.loc[df_Modify['primary_cancer_diagnosis_solid_tumors_complete'] == 'V5_6', 'primary_cancer_diagnosis_solid_tumors_complete'] = '2'
+df_Modify.loc[df_Modify['primary_cancer_diagnosis_solid_tumors_complete'] == 'V4.1_2', 'primary_cancer_diagnosis_solid_tumors_complete'] = '2'
+df_Modify.loc[df_Modify['primary_cancer_diagnosis_solid_tumors_complete'] == 'V4.1_8', 'primary_cancer_diagnosis_solid_tumors_complete'] = '2'
+df_Modify.loc[df_Modify['primary_cancer_diagnosis_solid_tumors_complete'] == 'V4_8', 'primary_cancer_diagnosis_solid_tumors_complete'] = '2'
+
+# Search for the specific value and update it with the new value in a column
+
+df_Modify.loc[df_Modify['mhbehav'] == '/1', 'mhbehav'] = '1'
+df_Modify.loc[df_Modify['mhbehav'] == '/2', 'mhbehav'] = '2'
+df_Modify.loc[df_Modify['mhbehav'] == '/3', 'mhbehav'] = '3'
+df_Modify.loc[df_Modify['mhbehav'] == '/6', 'mhbehav'] = '6'
+
+df_Modify.loc[df_Modify['mhpbehav'] == '/1', 'mhpbehav'] = '1'
+df_Modify.loc[df_Modify['mhpbehav'] == '/2', 'mhpbehav'] = '2'
+df_Modify.loc[df_Modify['mhpbehav'] == '/3', 'mhpbehav'] = '3'
+df_Modify.loc[df_Modify['mhpbehav'] == '/6', 'mhpbehav'] = '6'
+
+
+
+#export
+df_Modify.to_excel(r'C:\Users\dapengw\Desktop\python_report\Tempus_Demographics_DiagnosisSolidTumor_Final.xlsx', index=False)
+
+print('Done! Please check data')
